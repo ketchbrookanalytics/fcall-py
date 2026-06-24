@@ -1,0 +1,70 @@
+---
+title: "Comparing Quarters"
+guide-section: "How-to"
+---
+
+`compare_metadata()` diffs the metadata (`D_*.TXT`) files between two
+quarter directories so you can track schema changes over time.
+
+## Basic usage
+
+```python
+import fcall
+
+# Download two quarters
+fcall.download_data(year=2024, month=9, dest="q3_2024/")
+fcall.download_data(year=2025, month=9, dest="q3_2025/")
+
+diffs = fcall.compare_metadata("q3_2024/", "q3_2025/")
+```
+
+## Return structure
+
+`compare_metadata()` returns a dict with two keys:
+
+### `"file_differences"`
+
+Describes changes in which metadata files exist and in what order:
+
+```python
+fd = diffs["file_differences"]
+
+fd["only_in_dir1"]     # filenames present in dir1 but not dir2
+fd["only_in_dir2"]     # filenames present in dir2 but not dir1
+fd["order_different"]  # True if shared files appear in a different order
+```
+
+### `"content_differences"`
+
+A dict keyed by filename (shared files only). Each value is a list of
+unified-diff lines for files that changed; files with identical content are
+**omitted**:
+
+```python
+for filename, diff_lines in diffs["content_differences"].items():
+    print(f"--- {filename} ---")
+    print("\n".join(diff_lines))
+```
+
+## Example: same quarter, no differences
+
+Two downloads of the same quarter should show no differences:
+
+```python
+diffs = fcall.compare_metadata("q3_2025_copy1/", "q3_2025_copy2/")
+
+assert diffs["file_differences"]["only_in_dir1"] == []
+assert diffs["file_differences"]["only_in_dir2"] == []
+assert diffs["content_differences"] == {}
+```
+
+## Comparing a file directly
+
+`compare_files_content()` lets you diff a single file between two directories:
+
+```python
+from fcall import compare_files_content
+
+diff = compare_files_content("D_RCB.TXT", "q3_2024/", "q3_2025/")
+# Returns a list of unified-diff lines, or [] if identical
+```

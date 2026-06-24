@@ -1,0 +1,51 @@
+{
+    "name": "fcall Python package",
+    // uv is installed from Astral's official image via the Dockerfile (no
+    // third-party devcontainer feature).
+    "build": {
+        "dockerfile": "Dockerfile"
+    },
+
+    "features": {
+
+		// Install GitHub CLI
+		"ghcr.io/devcontainers/features/github-cli:1": {}
+		
+	},
+
+	// Pass local git, GitHub CLI, and Claude Code credentials to the container
+	"mounts": [
+      "source=${localEnv:USERPROFILE}/.gitconfig,target=/root/.gitconfig,type=bind,consistency=cached",
+      "source=${localEnv:USERPROFILE}/.config/gh,target=/root/.config/gh,type=bind,consistency=cached",
+	  "source=${localEnv:USERPROFILE}/.claude,target=/root/.claude,type=bind,consistency=cached"
+    ],
+
+    // Resolve + install the project (incl. dev extras) into a local `.venv`
+    // from the committed `uv.lock` whenever the container is (re)created.
+    "postCreateCommand": "uv sync --all-extras --dev",
+
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "Anthropic.claude-code",
+                "charliermarsh.ruff",
+                "ms-python.python",
+                "ms-python.vscode-pylance",
+                "quarto.quarto"
+            ],
+            "settings": {
+                "editor.rulers": [88],
+                "python.defaultInterpreterPath": "${workspaceFolder}/.venv/bin/python",
+                "python.testing.pytestEnabled": true,
+                "python.testing.pytestArgs": ["tests"],
+                "[python]": {
+                    "editor.defaultFormatter": "charliermarsh.ruff",
+                    "editor.formatOnSave": true,
+                    "editor.codeActionsOnSave": {
+                        "source.organizeImports": "explicit"
+                    }
+                }
+            }
+        }
+    }
+}

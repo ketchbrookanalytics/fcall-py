@@ -1,0 +1,115 @@
+---
+title: "Data Structure"
+guide-section: "Getting Started"
+---
+
+Understanding how FCA structures its Call Report files helps you work
+effectively with the output of `process_data()`.
+
+## Files in an archive
+
+Each quarterly zip contains pairs of files sharing a **root name** (everything
+before the first `_`):
+
+| File pattern | Role |
+|---|---|
+| `D_<ROOT>.TXT` | **Metadata** — column names, types, decimal positions, definitions |
+| `<ROOT>_Q<YYYYMM>_G<YYYYMMDD>.TXT` | **Data** — headerless CSV values |
+
+For example, the September 2025 archive contains `D_RCB.TXT` (metadata) and
+`RCB_Q202509_G20251112.TXT` (data).
+
+::: {.callout-note}
+Some metadata files in the `RCI2*` family carry an extra `_<YEAR>` suffix
+(`D_RCI2B_2016.TXT`, for instance) that is **not** present in the data
+filename. `fcall` handles this automatically.
+:::
+
+## The three scenarios
+
+`process_metadata_file()` classifies each dataset into one of three
+**scenarios** based on the structure of the metadata file.
+
+### `"single"`
+
+Plain CSV with no repeating column groups. Example: `INST` (institution
+information).
+
+```
+UNINUM  NAME  STATE  ...
+12345   Acme  CA     ...
+23456   Beta  TX     ...
+```
+
+### `"single_multiple"`
+
+Each row in the raw file contains data for **N codes** (e.g. investment
+types). The raw wide format is pivoted into one row per entity per code.
+
+Before pivot (wide):
+
+```
+UNINUM  INV_CODE__1  AMOUNT__1  INV_CODE__2  AMOUNT__2  ...
+12345   10           100.00     15           200.00     ...
+```
+
+After pivot (tidy):
+
+```
+UNINUM  INV_CODE  AMOUNT
+12345   10        100.00
+12345   15        200.00
+```
+
+Datasets in this category: `RCB`, `RCF`, `RCO`, and others.
+
+### `"single_multiple_single"`
+
+The raw data file wraps each record across `n_codes + 2` physical lines:
+leading single columns on line 1, one line per code in the middle, and
+trailing single columns on the last line. After parsing, the same pivot as
+`"single_multiple"` is applied.
+
+Datasets in this category: `RID`, `RCR3`, `RIE1`, and others.
+
+## Code dictionaries
+
+Datasets with repeating code groups use a **code dictionary** to map integer
+codes to human-readable labels. `fcall` ships 13 such dictionaries (ported
+from the R package's internal data):
+
+```python
+import fcall
+
+# Look up the code dictionary for a root name
+result = fcall.get_codes_dict("RCB")
+print(result["codes_dict"])
+# shape: (35, 2) — columns: [code, value]
+
+# Or fetch one directly by its full name
+rcb_inv = fcall.get_code_df("RCB__INV_CODE")
+```
+
+The `n_codes` count (number of rows in the dictionary) drives the wide
+column expansion before the pivot.
+
+## Metadata schema
+
+`process_metadata_file()` returns a dict with two keys:
+
+| Key | Type | Description |
+|---|---|---|
+| `"scenario"` | `str` | `"single"`, `"single_multiple"`, or `"single_multiple_single"` |
+| `"vars_info"` | `polars.DataFrame` | One row per column; see columns below |
+
+`vars_info` columns:
+
+| Column | Type | Description |
+|---|---|---|
+| `ColumnName` | `Utf8` | Variable name (cleaned of `**`) |
+| `ColumnType` | `Utf8` | `"Numeric"` or `"Alphanum."` |
+| `DecimalPosition` | `Int64` | Decimal places (0 = integer) |
+| `Definition` | `Utf8` | Free-text description from FCA |
+| `MultipleOccurrenceColumn` | `Boolean` | True for repeating columns |
+| `CodeColumn` | `Boolean` | True for the first repeating column (the code key) |
+| `ColumnTypeSQL` | `Utf8` | `"text"`, `"integer"`, or `"float"` |

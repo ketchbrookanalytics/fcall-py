@@ -1,0 +1,55 @@
+# Great Docs Configuration
+# See https://posit-dev.github.io/great-docs/user-guide/configuration.html
+
+parser: numpy
+dynamic: false
+
+authors:
+  - name: Michael Thomas
+    role: Author
+    email: mthomas@ketchbrookanalytics.com
+    github: mthomas-ketchbrook
+
+funding:
+  name: Ketchbrook Analytics
+  roles:
+    - Copyright holder
+    - funder
+  homepage: https://www.ketchbrookanalytics.com
+
+site_url: "https://ketchbrookanalytics.github.io/fcall-py/"
+
+site:
+  theme: flatly
+  toc: true
+  toc-depth: 2
+
+jupyter: python3
+
+reference:
+  - title: Core API
+    desc: The three user-facing functions that mirror the R {fcall} package.
+    contents:
+      - download_data
+      - process_data
+      - compare_metadata
+
+  - title: Lower-level helpers
+    desc: >
+      Exported for power users who need fine-grained control over parsing.
+      Most users should call ``process_data()`` instead.
+    contents:
+      - process_metadata_file
+      - process_data_file
+      - read_data_file
+      - get_codes_dict
+      - compare_files_content
+
+  - title: Data assets
+    desc: >
+      Internal datasets shipped with the package. ``fcall.file_metadata`` is a
+      Polars DataFrame (36 rows) mapping file prefixes to descriptions —
+      access it directly. ``get_code_df`` returns a code-to-label DataFrame
+      for datasets that have repeating code groups.
+    contents:
+      - get_code_df
