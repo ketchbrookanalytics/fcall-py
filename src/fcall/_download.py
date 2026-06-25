@@ -90,6 +90,11 @@ def download_data(
 def _resolve_month(month: int | str) -> str:
     """Return the full month name for *month* (name or 1-12 integer/string)."""
     if isinstance(month, str) and month in MONTH_NAMES:
+        idx = MONTH_NAMES.index(month) + 1
+        if idx not in _VALID_MONTHS:
+            raise ValueError(
+                f"`month` must be a valid quarter (March, June, September, or December), got {month!r}"
+            )
         return month
 
     # Try interpreting as an integer (handles both "9" and 9)
@@ -102,6 +107,9 @@ def _resolve_month(month: int | str) -> str:
 
     if not (1 <= idx <= 12):
         raise ValueError(f"`month` must be between 1 and 12, got {idx}")
+
+    if idx not in _VALID_MONTHS:
+        raise ValueError(f"`month` must be a valid quarter (3, 6, 9, or 12), got {idx}")
 
     return MONTH_NAMES[idx - 1]
 

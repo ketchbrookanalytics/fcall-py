@@ -32,6 +32,18 @@ class TestResolveMonth:
         with pytest.raises(ValueError):
             _resolve_month(0)
 
+    def test_non_quarter_integer_raises(self) -> None:
+        with pytest.raises(ValueError, match="valid quarter"):
+            _resolve_month(1)
+        with pytest.raises(ValueError, match="valid quarter"):
+            _resolve_month(7)
+
+    def test_non_quarter_name_raises(self) -> None:
+        with pytest.raises(ValueError, match="valid quarter"):
+            _resolve_month("January")
+        with pytest.raises(ValueError, match="valid quarter"):
+            _resolve_month("July")
+
 
 class TestBuildUrl:
     BASE = "https://fca-call-report-data.s3.us-east-1.amazonaws.com/raw/"
