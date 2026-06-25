@@ -168,10 +168,10 @@ def test_rcb_single_multiple_scenario(processed: dict) -> None:
 
 
 @pytest.mark.network
-def test_rid_single_multiple_single_scenario(processed: dict) -> None:
-    """RID uses a code dict and has trailing single cols → single_multiple_single."""
+def test_rid_single_multiple_scenario(processed: dict) -> None:
+    """RID uses a code dict with no trailing single cols → single_multiple."""
     meta = processed["metadata"]["RID"]
-    assert meta["scenario"] == "single_multiple_single"
+    assert meta["scenario"] == "single_multiple"
     df = processed["data"]["RID"]
     assert "UNINUM" in df.columns
     assert df.height > 0
