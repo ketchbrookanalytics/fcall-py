@@ -56,10 +56,10 @@ print(rcb_meta["vars_info"])       # Polars DataFrame of column definitions
 ### 3. Compare two quarters
 
 ```python
-fcall.download_data(year=2024, month=9, dest="fcadata_2024/")
+fcall.download_data(year=2023, month=9, dest="fcadata_2023/")
 fcall.download_data(year=2025, month=9, dest="fcadata_2025/")
 
-diffs = fcall.compare_metadata("fcadata_2024/", "fcadata_2025/")
+diffs = fcall.compare_metadata("fcadata_2023/", "fcadata_2025/")
 
 # Files added or removed
 print(diffs["file_differences"])

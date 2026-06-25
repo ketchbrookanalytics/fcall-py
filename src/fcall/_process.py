@@ -47,7 +47,7 @@ def process_data(dir: str | Path) -> dict[str, Any]:
             f"Error processing data: {exc}\n\n"
             "NOTE: There is an outstanding issue with the 2024 files posted "
             "by FCA. If you are trying to process 2024 data, please refer to "
-            "https://github.com/ketchbrookanalytics/fcall/issues/23 "
+            "https://github.com/ketchbrookanalytics/fcall-py/issues/1 "
             "for more information and solutions while FCA works on fixing the files.",
             stacklevel=2,
         )

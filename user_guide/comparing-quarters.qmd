@@ -9,13 +9,13 @@ quarter directories so you can track schema changes over time.
 ## Basic usage
 
 ```python
-import fcall
+import fcall as fc
 
 # Download two quarters
-fcall.download_data(year=2024, month=9, dest="q3_2024/")
-fcall.download_data(year=2025, month=9, dest="q3_2025/")
+fc.download_data(year=2022, month=9, dest="q3_2022/")
+fc.download_data(year=2025, month=9, dest="q3_2025/")
 
-diffs = fcall.compare_metadata("q3_2024/", "q3_2025/")
+diffs = fc.compare_metadata("q3_2022/", "q3_2025/")
 ```
 
 ## Return structure
@@ -65,6 +65,6 @@ assert diffs["content_differences"] == {}
 ```python
 from fcall import compare_files_content
 
-diff = compare_files_content("D_RCB.TXT", "q3_2024/", "q3_2025/")
+diff = compare_files_content("D_RCB.TXT", "q3_2022/", "q3_2025/")
 # Returns a list of unified-diff lines, or [] if identical
 ```
