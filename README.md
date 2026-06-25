@@ -4,7 +4,7 @@
 
 [![PyPI version](https://img.shields.io/pypi/v/fcall)](https://pypi.org/project/fcall/)
 [![PyPI downloads](https://img.shields.io/pypi/dm/fcall)](https://pypi.org/project/fcall/)
-[![CI](https://github.com/ketchbrookanalytics/fcall-py/actions/workflows/ci.yaml/badge.svg)](https://github.com/ketchbrookanalytics/fcall-py/actions/workflows/ci.yaml)
+[![CI](https://github.com/ketchbrookanalytics/fcall-py/actions/workflows/docs.yml/badge.svg)](https://github.com/ketchbrookanalytics/fcall-py/actions/workflows/docs.yml)
 
 <!-- badges: end -->
 
