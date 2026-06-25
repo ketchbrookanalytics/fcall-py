@@ -58,7 +58,7 @@ FCA's archive URL format changed in 2015:
 
 | Period | URL format | Example |
 |---|---|---|
-| 2015 – present | `{year}{MonthName}.zip` | `2020March.zip` |
+| 2015 - present | `{year}{MonthName}.zip` | `2020March.zip` |
 | Before 2015 | `{AbbrevMonth}{year}.zip` | `Sept2011.zip` |
 
 `download_data()` handles this automatically.
@@ -67,7 +67,7 @@ FCA's archive URL format changed in 2015:
 
 Check <https://www.fca.gov/bank-oversight/call-report-data-for-download> to
 confirm a quarter's data has been published before attempting a download.
-Typically each quarter's data appears 3–4 months after the period ends.
+Typically each quarter's data appears 3-4 months after the period ends.
 
 ::: {.callout-warning}
 ## 2024 data is broken

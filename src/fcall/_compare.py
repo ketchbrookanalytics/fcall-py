@@ -22,9 +22,9 @@ def compare_metadata(dir1: str | Path, dir2: str | Path) -> dict[str, Any]:
     ``"file_differences"``
         Sub-dict describing count/name/order differences:
 
-        - ``"only_in_dir1"`` – filenames present in *dir1* but not *dir2*
-        - ``"only_in_dir2"`` – filenames present in *dir2* but not *dir1*
-        - ``"order_different"`` – ``True`` if the shared files appear in a
+        - ``"only_in_dir1"`` - filenames present in *dir1* but not *dir2*
+        - ``"only_in_dir2"`` - filenames present in *dir2* but not *dir1*
+        - ``"order_different"`` - ``True`` if the shared files appear in a
           different order across the two directories
 
     ``"content_differences"``
