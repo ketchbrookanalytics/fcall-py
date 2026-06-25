@@ -54,7 +54,7 @@ def download_data(
     dest:
         Directory to extract files into (created if it does not exist).
     files:
-        Optional list of member names to extract; ``None`` extracts all.
+        Optional list of file names to extract; ``None`` extracts all.
     quiet:
         Suppress progress messages when ``True``.
     """
