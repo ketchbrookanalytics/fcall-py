@@ -73,6 +73,7 @@ def download_data(
     response = httpx.get(url, follow_redirects=True)
     response.raise_for_status()
 
+    # BytesIO avoids writing a temp file to disk before unzipping
     with zipfile.ZipFile(io.BytesIO(response.content)) as zf:
         members = files if files is not None else zf.namelist()
         zf.extractall(path=dest, members=members)

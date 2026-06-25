@@ -37,32 +37,47 @@ def compare_metadata(dir1: str | Path, dir2: str | Path) -> dict[str, Any]:
     if dir1.resolve() == dir2.resolve():
         raise ValueError("`dir1` and `dir2` are identical; nothing to compare")
 
+    # Retrieve a list of file names in each directory
     files1 = sorted(f.name for f in dir1.iterdir() if f.is_file())
     files2 = sorted(f.name for f in dir2.iterdir() if f.is_file())
 
+    # Filter the files in each directory to just those that represent the metadata
     meta1 = [f for f in files1 if f.startswith("D_")]
     meta2 = [f for f in files2 if f.startswith("D_")]
 
-    set1, set2 = set(meta1), set(meta2)
+    # Define sets for downstream comparison
+    set1, set2 = (
+        set(meta1),
+        set(meta2),
+    )  # sets for O(1) membership; lists preserve order
+
+    # Identify difference (in both directions) between the file names in the two
+    # directories
     only_in_dir1 = sorted(set1 - set2)
     only_in_dir2 = sorted(set2 - set1)
 
+    # Build shared lists from each dir's own sorted sequence so the order
+    # comparison reflects each quarter's actual file ordering, not a merged sort.
     shared = [f for f in meta1 if f in set2]
     shared2_order = [f for f in meta2 if f in set1]
     order_different = shared != shared2_order
 
+    # Create a dictionary of the file differences
     file_differences: dict[str, Any] = {
         "only_in_dir1": only_in_dir1,
         "only_in_dir2": only_in_dir2,
         "order_different": order_different,
     }
 
+    # Compare the *content* of each "matched" file across the two directories and create
+    # a dictionary to hold the content differences
     content_differences: dict[str, list[str]] = {}
     for filename in shared:
         diff = compare_files_content(filename, dir1, dir2)
-        if diff:
+        if diff:  # identical files are omitted from the result
             content_differences[filename] = diff
 
+    # Return both file & content differences
     return {
         "file_differences": file_differences,
         "content_differences": content_differences,
@@ -93,11 +108,7 @@ def compare_files_content(
     return diff
 
 
-# ---------------------------------------------------------------------------
-# Internal helper
-# ---------------------------------------------------------------------------
-
-
+# Define an internal helper function for cleaning up Windows-1252 encodings
 def _read_meta_lines(path: Path) -> list[str]:
     """Read a metadata file decoded from windows-1252, returning stripped lines."""
     raw = path.read_bytes().decode("windows-1252", errors="replace")

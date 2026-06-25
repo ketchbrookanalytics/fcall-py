@@ -71,7 +71,7 @@ def process_metadata_file(file: str | Path) -> dict[str, Any]:
     raw_bytes = Path(file).read_bytes()
     raw_text = raw_bytes.decode("windows-1252")
 
-    # Join all lines into one string (R: paste0(collapse = " "))
+    # Join all lines into one string
     lines = raw_text.splitlines()
     raw_text = " ".join(lines)
 
@@ -94,7 +94,8 @@ def process_metadata_file(file: str | Path) -> dict[str, Any]:
         raw_text,
     )
 
-    # Split into lines; first element is a preamble/header — skip it
+    # The regex above inserts \n before every variable token, so split("\n")[0]
+    # is always the header/preamble fragment before the first variable — skip it.
     var_lines = [ln for ln in raw_text.split("\n")[1:] if ln.strip()]
 
     rows: list[dict[str, Any]] = []
@@ -128,7 +129,8 @@ def process_metadata_file(file: str | Path) -> dict[str, Any]:
 
     multi_flags: list[bool] = [r["_multi"] for r in rows]
 
-    # CodeColumn: True only for the first row of the first multi-occurrence run
+    # CodeColumn: True only for the very first ** row — that column identifies
+    # which code-dictionary entry each data row belongs to (R: cumsum == 1).
     cumsum = 0
     code_col_flags: list[bool] = []
     for m in multi_flags:
@@ -262,7 +264,9 @@ def process_data_file(
     else:
         raise ValueError(f"Unknown scenario: {scenario!r}")
 
-    # Pivot: unpivot multi cols → strip numeric suffix → pivot wide
+    # Unpivot expanded cols (e.g. FIELD__1, FIELD__2) → extract the trailing
+    # code index as __code_id → strip it from the name → pivot back wide so
+    # each unique FIELD becomes one column with one row per (entity, code slot).
     data = (
         data.unpivot(on=expanded, index=single_cols)
         .with_columns(
@@ -275,7 +279,7 @@ def process_data_file(
             values="value",
             aggregate_function="first",
         )
-        .drop("__code_id")
+        .drop("__code_id")  # index used only for alignment; not meaningful after pivot
     )
 
     return data
@@ -298,7 +302,8 @@ def read_data_file(
             encoding="utf8-lossy",
         )
 
-    # single_multiple_single: collapse every (n_codes + 2) lines into one row
+    # single_multiple_single: each logical record spans n_codes multi-occurrence
+    # lines wrapped by 1 leading + 1 trailing single-occurrence line → +2.
     assert codes_dict is not None
     n_codes = len(codes_dict)
     chunk_size = n_codes + 2
@@ -350,7 +355,8 @@ def _process_data_all(dir: Path) -> dict[str, Any]:
     files = [f.name for f in sorted(dir.iterdir()) if f.is_file()]
     metadata_files = [f for f in files if f.startswith("D_")]
 
-    # Root name: strip "D_" prefix + ".TXT" suffix, then everything after first "_"
+    # RCI2* metadata files carry an extra _<YEAR> suffix (e.g. D_RCI2B_2024.TXT)
+    # that data filenames omit — strip everything after the first "_" to match.
     data_root_names = [
         re.sub(r"^(.*?)_.*$", r"\1", f.removeprefix("D_").removesuffix(".TXT"))
         for f in metadata_files
