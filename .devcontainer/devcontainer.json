@@ -22,7 +22,9 @@
 
     // Resolve + install the project (incl. dev extras) into a local `.venv`
     // from the committed `uv.lock` whenever the container is (re)created.
-    "postCreateCommand": "uv sync --all-extras --dev",
+    // Also fetches the latest Polars Claude Code skill from GitHub so all
+    // teammates automatically get it without a personal ~/.claude install.
+    "postCreateCommand": "uv sync --all-extras --dev && git clone --depth 1 https://github.com/polars-inc/skills.git /tmp/polars-skills-tmp && mkdir -p .claude/skills && rm -rf .claude/skills/polars && cp -r /tmp/polars-skills-tmp/polars .claude/skills/polars && rm -rf /tmp/polars-skills-tmp",
 
     "customizations": {
         "vscode": {
