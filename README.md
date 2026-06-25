@@ -10,7 +10,7 @@
 
 Python package for parsing Farm Credit Administration ("FCA") Call Report data into [tidy](https://vita.had.co.nz/papers/tidy-data.html) [Polars](https://pola.rs/) DataFrames.
 
-> There is also an equivalent R package {fcall} at <https://github.com/ketchbrookanalytics/fcall>.
+> There is also a related R package {fcall} at <https://github.com/ketchbrookanalytics/fcall>.
 
 ## Installation
 
