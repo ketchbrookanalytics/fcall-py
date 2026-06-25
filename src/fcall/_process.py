@@ -162,7 +162,7 @@ def process_metadata_file(file: str | Path) -> dict[str, Any]:
         }
     )
 
-    rle_count = _rle_count(multi_flags)
+    rle_count = len(pl.Series(multi_flags).rle())
     scenario_map = {1: "single", 2: "single_multiple", 3: "single_multiple_single"}
     scenario = scenario_map.get(rle_count)
     if scenario is None:
@@ -228,10 +228,10 @@ def process_data_file(
 
     # --- multi-occurrence scenarios ---
     single_cols: list[str] = vars_info.filter(
-        pl.col("MultipleOccurrenceColumn").eq(False)
+        ~pl.col("MultipleOccurrenceColumn")
     )["ColumnName"].to_list()
     multi_cols: list[str] = vars_info.filter(
-        pl.col("MultipleOccurrenceColumn").eq(True)
+        pl.col("MultipleOccurrenceColumn")
     )["ColumnName"].to_list()
 
     assert codes_dict is not None, "codes_dict required for multi-occurrence scenarios"
@@ -246,14 +246,15 @@ def process_data_file(
 
     elif scenario == "single_multiple_single":
         # Annotate vars_info with cumulative sum of CodeColumn to split single blocks
-        cumsum_code = _cumsum_bool(vars_info["CodeColumn"].to_list())
-        vi = vars_info.with_columns(pl.Series("__cs", cumsum_code, dtype=pl.Int32))
+        vi = vars_info.with_columns(
+            pl.col("CodeColumn").cast(pl.Int32).cum_sum().alias("__cs")
+        )
 
         leading_single: list[str] = vi.filter(
-            pl.col("MultipleOccurrenceColumn").eq(False) & pl.col("__cs").eq(0)
+            ~pl.col("MultipleOccurrenceColumn") & (pl.col("__cs") == 0)
         )["ColumnName"].to_list()
         trailing_single: list[str] = vi.filter(
-            pl.col("MultipleOccurrenceColumn").eq(False) & pl.col("__cs").gt(0)
+            ~pl.col("MultipleOccurrenceColumn") & (pl.col("__cs") > 0)
         )["ColumnName"].to_list()
         col_names = leading_single + expanded + trailing_single
         data = data.rename(
@@ -295,12 +296,12 @@ def read_data_file(
     file = Path(file)
 
     if scenario in ("single", "single_multiple"):
-        return pl.read_csv(
+        return pl.scan_csv(
             file,
             has_header=False,
             infer_schema_length=10000,
             encoding="utf8-lossy",
-        )
+        ).collect()
 
     # single_multiple_single: each logical record spans n_codes multi-occurrence
     # lines wrapped by 1 leading + 1 trailing single-occurrence line → +2.
@@ -329,20 +330,17 @@ def read_data_file(
         for j, val in enumerate(row):
             col_data[j].append(val.strip())
 
-    # Let Polars infer types from the string columns
     str_df = pl.DataFrame({f"column_{j}": col_data[j] for j in range(n_cols)})
-    # Cast string columns to numeric where possible
     cast_exprs = []
     for col in str_df.columns:
-        try:
-            str_df[col].cast(pl.Int64)
+        s = str_df[col]
+        base_nulls = s.null_count()
+        if s.cast(pl.Int64, strict=False).null_count() == base_nulls:
             cast_exprs.append(pl.col(col).cast(pl.Int64, strict=False))
-        except Exception:
-            try:
-                str_df[col].cast(pl.Float64)
-                cast_exprs.append(pl.col(col).cast(pl.Float64, strict=False))
-            except Exception:
-                cast_exprs.append(pl.col(col))
+        elif s.cast(pl.Float64, strict=False).null_count() == base_nulls:
+            cast_exprs.append(pl.col(col).cast(pl.Float64, strict=False))
+        else:
+            cast_exprs.append(pl.col(col))
     return str_df.with_columns(cast_exprs)
 
 
@@ -379,17 +377,6 @@ def _process_data_all(dir: Path) -> dict[str, Any]:
     return {"data": data, "metadata": metadata}
 
 
-def _rle_count(seq: list[bool]) -> int:
-    """Return the number of runs in *seq*."""
-    if not seq:
-        return 0
-    runs = 1
-    for a, b in zip(seq, seq[1:], strict=False):
-        if a != b:
-            runs += 1
-    return runs
-
-
 def _expand_multi_cols(multi_cols: list[str], n_codes: int) -> list[str]:
     """Expand like R's expand.grid(multi_cols, paste0('__', 1:n_codes)).
 
@@ -399,12 +386,3 @@ def _expand_multi_cols(multi_cols: list[str], n_codes: int) -> list[str]:
     return [f"{col}__{i}" for i in range(1, n_codes + 1) for col in multi_cols]
 
 
-def _cumsum_bool(seq: list[bool]) -> list[int]:
-    """Return cumulative sum of a bool list as integers."""
-    result: list[int] = []
-    total = 0
-    for v in seq:
-        if v:
-            total += 1
-        result.append(total)
-    return result

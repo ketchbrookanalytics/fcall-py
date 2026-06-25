@@ -10,7 +10,6 @@ import pytest
 import fcall
 from fcall._process import (
     _expand_multi_cols,
-    _rle_count,
     get_codes_dict,
     process_data,
     process_data_file,
@@ -232,13 +231,13 @@ class TestGetCodesDict:
 
 class TestHelpers:
     def test_rle_count_single(self) -> None:
-        assert _rle_count([False, False, False]) == 1
+        assert len(pl.Series([False, False, False]).rle()) == 1
 
     def test_rle_count_two_runs(self) -> None:
-        assert _rle_count([False, False, True, True]) == 2
+        assert len(pl.Series([False, False, True, True]).rle()) == 2
 
     def test_rle_count_three_runs(self) -> None:
-        assert _rle_count([False, True, True, False]) == 3
+        assert len(pl.Series([False, True, True, False]).rle()) == 3
 
     def test_expand_multi_cols(self) -> None:
         result = _expand_multi_cols(["A", "B"], 2)

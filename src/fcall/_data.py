@@ -344,9 +344,7 @@ _CODE_DICT_REGISTRY: dict[str, list[tuple[int, str]]] = {
 
 
 def _make_code_df(pairs: list[tuple[int, str]]) -> pl.DataFrame:
-    codes = [p[0] for p in pairs]
-    values = [p[1] for p in pairs]
-    return pl.DataFrame({"code": codes, "value": values})
+    return pl.DataFrame(pairs, schema={"code": pl.Int64, "value": pl.String}, orient="row")
 
 
 def get_code_df(registry_key: str) -> pl.DataFrame:
