@@ -178,6 +178,16 @@ def test_rid_single_multiple_scenario(processed: dict) -> None:
 
 
 @pytest.mark.network
+def test_rcr7_single_multiple_single_scenario(processed: dict) -> None:
+    """RCR7 uses a code dict and has trailing single cols → single_multiple_single."""
+    meta = processed["metadata"]["RCR7"]
+    assert meta["scenario"] == "single_multiple_single"
+    df = processed["data"]["RCR7"]
+    assert "UNINUM" in df.columns
+    assert df.height > 0
+
+
+@pytest.mark.network
 def test_uninum_is_integer_in_inst(processed: dict) -> None:
     """UNINUM should be numeric (institution identifier)."""
     inst_df = processed["data"]["INST"]
