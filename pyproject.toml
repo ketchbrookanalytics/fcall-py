@@ -1,6 +1,6 @@
 [project]
 name = "fcall"
-version = "0.0.0"
+version = "0.0.1"
 description = "Parse Farm Credit Administration (FCA) Call Report data into tidy Polars data frames"
 readme = "README.md"
 requires-python = ">=3.11"
