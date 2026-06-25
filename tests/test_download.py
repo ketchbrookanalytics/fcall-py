@@ -23,13 +23,13 @@ class TestResolveMonth:
         assert _resolve_month("12") == "December"
 
     def test_invalid_string_raises(self) -> None:
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError, match="month name or an integer"):
             _resolve_month("Octember")
 
     def test_out_of_range_raises(self) -> None:
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError, match="between 1 and 12"):
             _resolve_month(13)
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError, match="between 1 and 12"):
             _resolve_month(0)
 
     def test_non_quarter_integer_raises(self) -> None:
@@ -73,5 +73,5 @@ class TestBuildUrl:
         assert url == f"{self.BASE}2015March.zip"
 
     def test_pre_2015_non_quarterly_raises(self) -> None:
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError, match="only supports quarterly months"):
             _build_url(2010, "January")

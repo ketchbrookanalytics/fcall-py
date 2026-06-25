@@ -109,7 +109,7 @@ class TestProcessDataFile:
             meta,
             two_code_dict,
         )
-        # After pivot: 2 institutions × 2 codes = 4 rows
+        # After pivot: 2 institutions x 2 codes = 4 rows
         assert df.height == 4
         assert set(df.columns) == {"UNINUM", "REPDATE", "INV_CODE", "AMOUNT"}
         # Each institution should appear twice (once per code)
@@ -129,7 +129,7 @@ class TestProcessDataFile:
             meta,
             two_code_dict,
         )
-        # 2 institutions × 2 codes = 4 rows
+        # 2 institutions x 2 codes = 4 rows
         assert df.height == 4
         assert set(df.columns) == {"UNINUM", "REPDATE", "CAP_CODE", "AMOUNT", "TOTAL"}
 

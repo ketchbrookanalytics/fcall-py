@@ -276,7 +276,7 @@ def process_data_file(
         )
         .pivot(
             on="variable",
-            index=single_cols + ["__code_id"],
+            index=[*single_cols, "__code_id"],
             values="value",
             aggregate_function="first",
         )

@@ -162,7 +162,7 @@ def test_rcb_single_multiple_scenario(processed: dict) -> None:
     assert df.height > 0
     n_codes = get_codes_dict("RCB")["codes_dict"]
     assert n_codes is not None
-    # All institutions × codes should produce more rows than institutions
+    # All institutions x codes should produce more rows than institutions
     n_inst = processed["data"]["INST"].height
     assert df.height >= n_inst  # at least as many rows as institutions
 

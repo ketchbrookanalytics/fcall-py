@@ -46,7 +46,9 @@ line-length = 88
 src = ["src", "tests"]
 
 [tool.ruff.lint]
-select = ["E", "F", "I", "UP", "B", "SIM"]
+preview = true
+select = ["E", "E225", "E252", "F", "I", "UP", "B", "SIM", "PT", "N", "RUF"]
+ignore = ["RUF022"]  # __all__ is organized by category, not alphabetically
 
 [tool.ruff.lint.per-file-ignores]
 "src/fcall/_data.py" = ["E501"]  # long verbatim string literals from R source

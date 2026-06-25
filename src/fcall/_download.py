@@ -93,7 +93,8 @@ def _resolve_month(month: int | str) -> str:
         idx = MONTH_NAMES.index(month) + 1
         if idx not in _VALID_MONTHS:
             raise ValueError(
-                f"`month` must be a valid quarter (March, June, September, or December), got {month!r}"
+                f"`month` must be a valid quarter "
+                f"(March, June, September, or December), got {month!r}"
             )
         return month
 
