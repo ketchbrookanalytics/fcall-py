@@ -3,12 +3,9 @@ title: "Getting Started"
 guide-section: "Getting Started"
 ---
 
-`fcall` is a Python package for parsing **Farm Credit Administration (FCA) Call
-Report** data into tidy [Polars](https://pola.rs) DataFrames.
+`fcall` is a Python package for parsing **Farm Credit Administration (FCA) Call Report** data into tidy [Polars](https://pola.rs) DataFrames.
 
-It is a Python re-implementation of the R package
-[{fcall}](https://github.com/ketchbrookanalytics/fcall) by
-[Ketchbrook Analytics](https://www.ketchbrookanalytics.com).
+It is a Python re-implementation of the R package [{fcall}](https://github.com/ketchbrookanalytics/fcall) by [Ketchbrook Analytics](https://www.ketchbrookanalytics.com).
 
 ## Installation
 
@@ -28,15 +25,13 @@ The package exposes three functions that mirror the R package's public API.
 import fcall
 
 fcall.download_data(
-    year=2025,
-    month="September",   # or month=9
-    dest="fcadata/",
+    year = 2025,
+    month = "September",   # or month=9
+    dest = "fcadata/",
 )
 ```
 
-This downloads the September 2025 archive from FCA's public S3 bucket and
-unzips it into `fcadata/`. Valid quarters are **March, June, September, and
-December** (or integers 3, 6, 9, 12).
+This downloads the September 2025 archive from Ketchbrook's public AWS S3 bucket and unzips it into `fcadata/`. Valid quarters are **March, June, September, and December** (or integers 3, 6, 9, 12).
 
 ### 2. Parse the data
 
@@ -59,7 +54,10 @@ print(rcb_meta["vars_info"])       # Polars DataFrame of column definitions
 fcall.download_data(year=2023, month=9, dest="fcadata_2023/")
 fcall.download_data(year=2025, month=9, dest="fcadata_2025/")
 
-diffs = fcall.compare_metadata("fcadata_2023/", "fcadata_2025/")
+diffs = fcall.compare_metadata(
+    dir1="fcadata_2023/",
+    dir2="fcadata_2025/",
+)
 
 # Files added or removed
 print(diffs["file_differences"])
@@ -72,7 +70,7 @@ for filename, diff_lines in diffs["content_differences"].items():
 
 ## What data is available?
 
-FCA publishes Call Report data quarterly. As of 2025 there are **36 datasets**
+FCA publishes Call Report data quarterly. As of March 2026 there are **36 datasets**
 per quarter (72 files: one metadata `D_*.TXT` and one data file per dataset).
 See `fcall.file_metadata` for the full list with descriptions:
 
@@ -85,8 +83,5 @@ print(fcall.file_metadata)
 ::: {.callout-warning}
 ## 2024 data is broken
 
-FCA's 2024 posted files contain a known defect. If you try to process 2024
-data, `fcall` will emit a warning and point you to
-[ketchbrookanalytics/fcall#23](https://github.com/ketchbrookanalytics/fcall/issues/23)
-for details and workarounds.
+FCA's 2024 posted files contain a known defect. If you try to process 2024 data, `fcall` will emit a warning and point you to [ketchbrookanalytics/fcall-py/issues/1](https://github.com/ketchbrookanalytics/fcall-py/issues/1) for details and workarounds.
 :::

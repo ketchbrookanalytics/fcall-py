@@ -3,19 +3,18 @@ title: "Comparing Quarters"
 guide-section: "How-to"
 ---
 
-`compare_metadata()` diffs the metadata (`D_*.TXT`) files between two
-quarter directories so you can track schema changes over time.
+`compare_metadata()` diffs the metadata (`D_*.TXT`) files between two quarter directories so you can track schema changes over time.
 
 ## Basic usage
 
 ```python
-import fcall as fc
+import fcall
 
 # Download two quarters
-fc.download_data(year=2022, month=9, dest="q3_2022/")
-fc.download_data(year=2025, month=9, dest="q3_2025/")
+fcall.download_data(year=2014, month=9, dest="q3_2014/")
+fcall.download_data(year=2025, month=9, dest="q3_2025/")
 
-diffs = fc.compare_metadata("q3_2022/", "q3_2025/")
+diffs = fcall.compare_metadata("q3_2014/", "q3_2025/")
 ```
 
 ## Return structure
@@ -41,9 +40,14 @@ unified-diff lines for files that changed; files with identical content are
 **omitted**:
 
 ```python
-for filename, diff_lines in diffs["content_differences"].items():
+# Look at all of the content differences across all files
+for filename, lines in diffs["content_differences"].items():
     print(f"--- {filename} ---")
-    print("\n".join(diff_lines))
+    fcall.print_diff(lines)
+
+# Or look at the content differences for a specific file
+lines = diffs["content_differences"]["D_RI.TXT"]
+fcall.print_diff(lines)
 ```
 
 ## Example: same quarter, no differences
@@ -65,6 +69,10 @@ assert diffs["content_differences"] == {}
 ```python
 from fcall import compare_files_content
 
-diff = compare_files_content("D_RCB.TXT", "q3_2022/", "q3_2025/")
-# Returns a list of unified-diff lines, or [] if identical
+diff = compare_files_content(
+    filename="D_RI.TXT",
+    dir1="q3_2014/",
+    dir2="q3_2025/",
+)
+fcall.print_diff(diff)
 ```

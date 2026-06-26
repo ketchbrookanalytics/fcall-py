@@ -3,8 +3,7 @@ title: "Downloading Data"
 guide-section: "How-to"
 ---
 
-`download_data()` fetches a quarterly FCA Call Report archive from Ketchbrook
-Analytics' public S3 mirror and extracts it locally.
+`download_data()` fetches a quarterly FCA Call Report archive from Ketchbrook Analytics' public AWS S3 mirror and extracts it locally.
 
 ## Basic usage
 
@@ -24,16 +23,23 @@ fcall.download_data(
 
 ```python
 # Both of these download September 2025
-fcall.download_data(year=2025, month="September", dest="sep_by_name/")
-fcall.download_data(year=2025, month=9,           dest="sep_by_int/")
+fcall.download_data(
+    year=2025,
+    month="September",
+    dest="sep_by_name/",
+)
+fcall.download_data(
+    year=2025,
+    month=9,
+    dest="sep_by_int/",
+)
 ```
 
 Valid quarters are **3 (March), 6 (June), 9 (September), 12 (December)**.
 
 ## Selective extraction
 
-Use the `files` argument to extract only the files you need — useful for
-large archives when you only care about one dataset:
+Use the `files` argument to extract only the specific file(s) you want to download.
 
 ```python
 fcall.download_data(
@@ -49,7 +55,12 @@ fcall.download_data(
 Pass `quiet=True` to suppress the progress messages:
 
 ```python
-fcall.download_data(year=2025, month=9, dest="data/", quiet=True)
+fcall.download_data(
+    year=2025,
+    month=9,
+    dest="data/",
+    quiet=True,
+)
 ```
 
 ## URL convention
@@ -65,14 +76,10 @@ FCA's archive URL format changed in 2015:
 
 ## Data availability
 
-Check <https://www.fca.gov/bank-oversight/call-report-data-for-download> to
-confirm a quarter's data has been published before attempting a download.
-Typically each quarter's data appears 3-4 months after the period ends.
+Check <https://www.fca.gov/bank-oversight/call-report-data-for-download> to confirm a quarter's data has been published before attempting a download. Typically each quarter's data appears 5-6 weeks after the period ends.
 
 ::: {.callout-warning}
 ## 2024 data is broken
 
-FCA's 2024 files contain a known defect. See
-[ketchbrookanalytics/fcall#23](https://github.com/ketchbrookanalytics/fcall/issues/23)
-for details and workarounds while FCA addresses the issue.
+FCA's 2024 files contain a known defect. See [ketchbrookanalytics/fcall-py#1](https://github.com/ketchbrookanalytics/fcall-py/issues/1) for details and workarounds while FCA addresses the issue.
 :::

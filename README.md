@@ -38,7 +38,7 @@ uv add git+https://github.com/ketchbrookanalytics/fcall-py.git
 
 FCA publishes Call Report data on a quarterly basis at <https://www.fca.gov/bank-oversight/call-report-data-for-download>. Ketchbrook Analytics replicates these files in a public AWS S3 bucket, which `fcall` interacts with via its `download_data()` function.
 
-As of September 2025, this data represents a set of 72 *.TXT* files. These files represent 36 datasets. The files prefixed with "D\_" contain *metadata* (the column names, data types, etc.) of the associated file containing the raw, header-less comma-separated data. For example, the file that starts with *"D_INST"* contains the metadata for the file that starts with *"INST\_"*.
+As of March 2026, this data represents a set of 72 *.TXT* files. These files represent 36 datasets. The files prefixed with "D\_" contain *metadata* (the column names, data types, etc.) of the associated file containing the raw, header-less comma-separated data. For example, the file that starts with *"D_INST"* contains the metadata for the file that starts with *"INST\_"*.
 
 Further, some of these datasets are structured in a way that makes data analysis difficult. In these cases, we chose to pivot the data to make it more analysis-friendly.
 
@@ -51,29 +51,29 @@ This package provides 3 utility functions:
 ## Usage
 
 ```python
-import fcall as fc
+import fcall
 
 # Download & unzip a quarter into a directory
-fc.download_data(
-  year = 2025,
-  month = "September",
-  dest = "./fcadata"
+fcall.download_data(
+    year=2025,
+    month="September",
+    dest="./fcadata",
 )
 
 # Parse the .TXT files into tidy Polars DataFrames + metadata
-result = fc.process_data("./fcadata")
+result = fcall.process_data("./fcadata")
 result["data"]["RCB"]      # a polars.DataFrame
 result["metadata"]["RCB"]  # parsed schema for RCB
 
 # Compare metadata between two quarters
-fc.download_data(
-  year = 2022,
-  month = "September",
-  dest = "./fcadata2"
+fcall.download_data(
+    year=2022,
+    month="September",
+    dest="./fcadata2",
 )
-fc.compare_metadata(
-  dir1 = "./fcadata",
-  dir2 = "./fcadata2"
+fcall.compare_metadata(
+    dir1="./fcadata",
+    dir2="./fcadata2",
 )
 ```
 
