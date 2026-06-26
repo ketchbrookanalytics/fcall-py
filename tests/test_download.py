@@ -2,9 +2,30 @@
 
 from __future__ import annotations
 
+import io
+import zipfile
+from unittest.mock import MagicMock, patch
+
+import httpx
 import pytest
 
+import fcall
 from fcall._download import _build_url, _resolve_month
+
+
+def _make_zip(*names: str) -> bytes:
+    buf = io.BytesIO()
+    with zipfile.ZipFile(buf, "w") as zf:
+        for name in names:
+            zf.writestr(name, "")
+    return buf.getvalue()
+
+
+def _mock_response(zip_bytes: bytes) -> MagicMock:
+    resp = MagicMock(spec=httpx.Response)
+    resp.content = zip_bytes
+    resp.raise_for_status = MagicMock()
+    return resp
 
 
 class TestResolveMonth:
@@ -75,3 +96,30 @@ class TestBuildUrl:
     def test_pre_2015_non_quarterly_raises(self) -> None:
         with pytest.raises(ValueError, match="only supports quarterly months"):
             _build_url(2010, "January")
+
+
+class TestDownloadFilesValidation:
+    _ZIP = _make_zip("INST_Q202603_G20260401.TXT", "D_INST.TXT")
+
+    def test_bad_file_raises_key_error(self, tmp_path: "pytest.TempPathFactory") -> None:
+        with patch("httpx.get", return_value=_mock_response(self._ZIP)):
+            with pytest.raises(KeyError, match="INST"):
+                fcall.download_data(year=2026, month=3, dest=tmp_path, files=["INST"])
+
+    def test_bad_file_message_hints_exact_name(self, tmp_path: "pytest.TempPathFactory") -> None:
+        with patch("httpx.get", return_value=_mock_response(self._ZIP)):
+            with pytest.raises(KeyError, match="exact file name"):
+                fcall.download_data(year=2026, month=3, dest=tmp_path, files=["INST"])
+
+    def test_bare_string_treated_as_single_file(self, tmp_path: "pytest.TempPathFactory") -> None:
+        with patch("httpx.get", return_value=_mock_response(self._ZIP)):
+            with pytest.raises(KeyError, match="INST"):
+                fcall.download_data(year=2026, month=3, dest=tmp_path, files="INST")
+
+    def test_valid_files_extracts_successfully(self, tmp_path: "pytest.TempPathFactory") -> None:
+        with patch("httpx.get", return_value=_mock_response(self._ZIP)):
+            fcall.download_data(
+                year=2026, month=3, dest=tmp_path,
+                files=["INST_Q202603_G20260401.TXT"], quiet=True,
+            )
+        assert (tmp_path / "INST_Q202603_G20260401.TXT").exists()

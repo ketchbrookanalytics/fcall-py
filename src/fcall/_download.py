@@ -75,7 +75,20 @@ def download_data(
 
     # BytesIO avoids writing a temp file to disk before unzipping
     with zipfile.ZipFile(io.BytesIO(response.content)) as zf:
-        members = files if files is not None else zf.namelist()
+        if files is not None:
+            if isinstance(files, str):
+                files = [files]
+            available = set(zf.namelist())
+            missing = [f for f in files if f not in available]
+            if missing:
+                raise KeyError(
+                    f"There is no item named {missing[0]!r} in the archive.  "
+                    "Please pass the exact file name(s) you want to download to "
+                    "the `files` argument of `download_data()`."
+                )
+            members = files
+        else:
+            members = zf.namelist()
         zf.extractall(path=dest, members=members)
 
     if not quiet:
