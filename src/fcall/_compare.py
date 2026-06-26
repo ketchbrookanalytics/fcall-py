@@ -3,8 +3,15 @@
 from __future__ import annotations
 
 import difflib
+import sys
 from pathlib import Path
 from typing import Any
+
+_RESET = "\033[0m"
+_RED = "\033[31m"
+_GREEN = "\033[32m"
+_CYAN = "\033[36m"
+_BOLD = "\033[1m"
 
 
 def compare_metadata(dir1: str | Path, dir2: str | Path) -> dict[str, Any]:
@@ -106,6 +113,49 @@ def compare_files_content(
         )
     )
     return diff
+
+
+def print_diff(lines: list[str], *, color: bool | None = None) -> None:
+    """Pretty-print unified-diff lines returned by :func:`compare_files_content`.
+
+    Parameters
+    ----------
+    lines:
+        The list of unified-diff lines returned by :func:`compare_files_content`.
+    color:
+        Whether to emit ANSI color codes.  Defaults to ``True`` when stdout is
+        a TTY, ``False`` otherwise (e.g. when piped to a file).
+
+    Examples
+    --------
+    Print the diff for a single file::
+
+        lines = fc.compare_files_content("D_RCB.TXT", "q3_2010/", "q3_2025/")
+        fc.print_diff(lines)
+
+    Iterate over all content differences from :func:`compare_metadata`::
+
+        diffs = fc.compare_metadata("q3_2010/", "q3_2025/")
+        for filename, lines in diffs["content_differences"].items():
+            print(filename)
+            fc.print_diff(lines)
+    """
+    use_color = sys.stdout.isatty() if color is None else color
+
+    def _c(code: str, text: str) -> str:
+        return f"{code}{text}{_RESET}" if use_color else text
+
+    for line in lines:
+        if line.startswith("---") or line.startswith("+++"):
+            print(_c(_BOLD, line))
+        elif line.startswith("@@"):
+            print(_c(_CYAN, line))
+        elif line.startswith("-"):
+            print(_c(_RED, line))
+        elif line.startswith("+"):
+            print(_c(_GREEN, line))
+        else:
+            print(line)
 
 
 # Define an internal helper function for cleaning up Windows-1252 encodings
