@@ -1,0 +1,6 @@
+Capital code test file
+UNINUM Numeric 0 Unique institution number
+REPDATE Numeric 0 Report date
+**CAP_CODE Numeric 0 Capital code
+**AMOUNT Numeric 2 Amount
+TOTAL Numeric 2 Total amount

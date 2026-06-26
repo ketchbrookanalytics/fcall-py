@@ -1,0 +1,2 @@
+Extra file only in compare_a
+UNINUM Numeric 0 Unique institution number

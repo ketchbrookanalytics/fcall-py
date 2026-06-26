@@ -1,0 +1,5 @@
+Investment test file
+UNINUM Numeric 0 Unique institution number
+REPDATE Numeric 0 Report date
+**INV_CODE Numeric 0 Investment code
+**AMOUNT Numeric 2 Amount in thousands

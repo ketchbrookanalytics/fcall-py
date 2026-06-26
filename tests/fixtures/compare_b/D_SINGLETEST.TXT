@@ -1,0 +1,4 @@
+Institution test file MODIFIED
+UNINUM Numeric 0 Unique institution number
+NAME Alphanum. 0 Institution name
+ZIPCODE Alphanum. 0 Zip code

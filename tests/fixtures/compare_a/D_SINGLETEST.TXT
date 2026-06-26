@@ -1,0 +1,4 @@
+Institution test file
+UNINUM Numeric 0 Unique institution number
+NAME Alphanum. 0 Institution name
+STATE Alphanum. 0 State code
