@@ -14,6 +14,7 @@ from fcall._process import (
     process_data,
     process_data_file,
     process_metadata_file,
+    read_data_file,
 )
 
 FIXTURES = Path(__file__).parent / "fixtures"
@@ -147,6 +148,31 @@ class TestProcessDataFile:
         cap_code = df["CAP_CODE"].cast(pl.Int64).to_list()
         assert uninum == [12345, 12345, 23456, 23456]
         assert cap_code == [10, 20, 30, 40]
+
+    def test_missing_codes_dict_raises(self, single_multiple_dir: Path) -> None:
+        meta = process_metadata_file(single_multiple_dir / "D_SMTEST.TXT")
+        with pytest.raises(ValueError, match="`codes_dict` is required"):
+            process_data_file(
+                single_multiple_dir / "SMTEST_Q202312_G20240115.TXT", meta
+            )
+
+
+# ---------------------------------------------------------------------------
+# read_data_file
+# ---------------------------------------------------------------------------
+
+
+class TestReadDataFile:
+    def test_missing_codes_dict_raises(
+        self, single_multiple_single_dir: Path
+    ) -> None:
+        meta = process_metadata_file(single_multiple_single_dir / "D_SMSTEST.TXT")
+        with pytest.raises(ValueError, match="`codes_dict` is required"):
+            read_data_file(
+                single_multiple_single_dir / "SMSTEST_Q202312_G20240115.TXT",
+                meta,
+                None,
+            )
 
 
 # ---------------------------------------------------------------------------
