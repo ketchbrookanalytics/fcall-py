@@ -22,7 +22,7 @@ from fcall._process import (
     read_data_file,
 )
 
-__version__ = "0.0.1"
+__version__ = "0.1.0"
 
 __all__ = [
     # Core public API

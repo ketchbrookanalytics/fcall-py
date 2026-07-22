@@ -1,6 +1,6 @@
 [project]
 name = "fcall"
-version = "0.0.1"
+dynamic = ["version"]
 description = "Parse Farm Credit Administration (FCA) Call Report data into tidy Polars data frames"
 readme = "README.md"
 requires-python = ">=3.11"
@@ -37,6 +37,9 @@ dev = [
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
+
+[tool.hatch.version]
+path = "src/fcall/__init__.py"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/fcall"]

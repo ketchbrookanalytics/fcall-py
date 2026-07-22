@@ -1,0 +1,37 @@
+name: Publish to TestPyPI
+
+# Manual dry-run: publishes to TestPyPI (https://test.pypi.org) so the whole
+# OIDC + build + upload pipeline can be rehearsed before a real PyPI release.
+# Trigger it from the Actions tab ("Run workflow").
+#
+# TestPyPI rejects re-uploads of an existing version, so bump __version__ (or
+# use a .devN / rcN suffix) between dry-runs. --check-url makes an already-
+# uploaded version a no-op instead of a hard failure.
+
+on:
+  workflow_dispatch:
+
+jobs:
+  publish-testpypi:
+    name: "Build & publish to TestPyPI"
+    runs-on: ubuntu-latest
+    environment:
+      name: testpypi
+      url: https://test.pypi.org/project/fcall/
+    permissions:
+      id-token: write  # REQUIRED for trusted publishing (OIDC)
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+
+      - name: Build sdist and wheel
+        run: uv build
+
+      - name: Publish to TestPyPI
+        run: >
+          uv publish
+          --trusted-publishing always
+          --publish-url https://test.pypi.org/legacy/
+          --check-url https://test.pypi.org/simple/

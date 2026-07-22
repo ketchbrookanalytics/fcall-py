@@ -1,0 +1,42 @@
+name: Publish to PyPI
+
+# Publishes the package to PyPI when a GitHub Release is published.
+# Authentication uses PyPI Trusted Publishing (OIDC) — no API tokens/secrets.
+# See: https://docs.pypi.org/trusted-publishers/
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  publish:
+    name: "Build & publish to PyPI"
+    runs-on: ubuntu-latest
+    environment:
+      name: pypi
+      url: https://pypi.org/project/fcall/
+    permissions:
+      id-token: write  # REQUIRED for trusted publishing (OIDC)
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+
+      - name: Verify release tag matches package version
+        run: |
+          VERSION=$(grep -oP '(?<=__version__ = ")[^"]+' src/fcall/__init__.py)
+          TAG="${{ github.event.release.tag_name }}"
+          TAG="${TAG#v}"  # strip an optional leading "v"
+          echo "Package version: $VERSION"
+          echo "Release tag:     $TAG"
+          if [ "$VERSION" != "$TAG" ]; then
+            echo "::error::Release tag ($TAG) does not match __version__ ($VERSION). Bump src/fcall/__init__.py and re-tag."
+            exit 1
+          fi
+
+      - name: Build sdist and wheel
+        run: uv build
+
+      - name: Publish to PyPI
+        run: uv publish --trusted-publishing always
