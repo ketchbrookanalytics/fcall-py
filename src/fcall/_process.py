@@ -234,7 +234,11 @@ def process_data_file(
         pl.col("MultipleOccurrenceColumn")
     )["ColumnName"].to_list()
 
-    assert codes_dict is not None, "codes_dict required for multi-occurrence scenarios"
+    if codes_dict is None:
+        raise ValueError(
+            f"`codes_dict` is required for the {scenario!r} scenario; "
+            "pass the DataFrame returned by `get_codes_dict()`."
+        )
     n_codes: int = len(codes_dict)
     expanded = _expand_multi_cols(multi_cols, n_codes)
 
@@ -305,7 +309,11 @@ def read_data_file(
 
     # single_multiple_single: each logical record spans n_codes multi-occurrence
     # lines wrapped by 1 leading + 1 trailing single-occurrence line → +2.
-    assert codes_dict is not None
+    if codes_dict is None:
+        raise ValueError(
+            f"`codes_dict` is required for the {scenario!r} scenario; "
+            "pass the DataFrame returned by `get_codes_dict()`."
+        )
     n_codes = len(codes_dict)
     chunk_size = n_codes + 2
 
