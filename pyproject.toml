@@ -23,6 +23,7 @@ dependencies = [
 
 [project.urls]
 Homepage = "https://github.com/ketchbrookanalytics/fcall-py"
+Documentation = "https://ketchbrookanalytics.github.io/fcall-py/"
 Repository = "https://github.com/ketchbrookanalytics/fcall-py"
 "R package" = "https://github.com/ketchbrookanalytics/fcall"
 
