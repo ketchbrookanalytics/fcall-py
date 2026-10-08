@@ -149,9 +149,11 @@ multi-column expansion above. Datasets with no matching dict have no codes.
 
 ## Caveats & gotchas
 
-- **2024 FCA data is broken.** FCA's posted 2024 files have a known defect; the
-  R package catches processing errors and points users to
-  `ketchbrookanalytics/fcall` issue #23. Replicate a clear, similar warning.
+- **2024 S3 files differ from FCA's.** FCA's posted 2024 `RCR7` files are
+  missing rows. Ketchbrook added those rows to the copies in the S3 bucket
+  (`ketchbrookanalytics/fcall` #23, #46), so 2024 now processes normally. The
+  old "2024 data is broken" warning was removed in R 0.1.7 (fcall#47/#48) and
+  here (fcall-py#4).
 - **Encoding is Windows-1252**, not UTF-8. Always decode explicitly when reading
   both metadata and (for `compare_metadata`) raw content. Several code-dictionary
   `value` strings contain mojibake (`?` standing in for `≥`/`≤`/curly quotes)
