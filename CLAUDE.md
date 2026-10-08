@@ -166,8 +166,6 @@ multi-column expansion above. Datasets with no matching dict have no codes.
 - **`waldo::compare` has no Polars/Python equivalent.** `compare_metadata` will
   need a hand-rolled diff (line-level for content; set/order diff for filenames).
   Keep the returned structure usefully introspectable.
-- **PyPI name.** Confirm `fcall` is available on PyPI before first publish; pick
-  a fallback (e.g. `fcall-py`) if taken. The import name should stay `fcall`.
 - **Don't commit downloaded data** — `.TXT`/`.zip`/`fcadata*/` are gitignored.
 
 ## Conventions
