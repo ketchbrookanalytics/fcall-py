@@ -74,6 +74,17 @@ FCA's archive URL format changed in 2015:
 
 `download_data()` handles this automatically.
 
+## Handling failed downloads
+
+`download_data()` returns `True` if the data was downloaded and unzipped successfully. If it can't download the data (e.g., there is no internet connection, the S3 bucket is unavailable, or there is no data for the requested `year` and `month`) or can't unzip it, `download_data()` prints an informative message and returns `False` instead of raising an error. Invalid arguments, such as a non-quarter `month`, still raise an error.
+
+Check the return value before processing:
+
+```python
+if fcall.download_data(year=2025, month=9, dest="data/"):
+    result = fcall.process_data("data/")
+```
+
 ## Data availability
 
 Check <https://www.fca.gov/bank-oversight/call-report-data-for-download> to confirm a quarter's data has been published before attempting a download. Typically each quarter's data appears 5-6 weeks after the period ends.

@@ -9,7 +9,6 @@ from __future__ import annotations
 import csv
 import io
 import re
-import warnings
 from pathlib import Path
 from typing import Any
 

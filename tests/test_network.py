@@ -67,6 +67,26 @@ def test_download_txt_extension(downloaded_dir: Path) -> None:
 
 
 @pytest.mark.network
+def test_download_returns_true_on_success(tmp_path: Path) -> None:
+    out = fcall.download_data(
+        year=_YEAR, month=_MONTH, dest=tmp_path, files=["D_INST.TXT"], quiet=True
+    )
+    assert out is True
+    assert [f.name for f in tmp_path.iterdir()] == ["D_INST.TXT"]
+
+
+@pytest.mark.network
+def test_download_fails_gracefully_on_404(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    # No data exists for a year in the future, so S3 returns an error
+    out = fcall.download_data(year=2099, month=3, dest=tmp_path, quiet=True)
+    assert out is False
+    assert "Could not download" in capsys.readouterr().err
+    assert list(tmp_path.iterdir()) == []
+
+
+@pytest.mark.network
 def test_download_selective_files(tmp_path: Path) -> None:
     """Selective extract: only the INST files."""
     inst_dest = tmp_path / "inst_only"
