@@ -76,7 +76,7 @@ FCA's archive URL format changed in 2015:
 
 ## Handling failed downloads
 
-`download_data()` returns `True` if the data was downloaded and unzipped successfully. If it can't download the data (e.g., there is no internet connection, the S3 bucket is unavailable, or there is no data for the requested `year` and `month`) or can't unzip it, `download_data()` prints an informative message and returns `False` instead of raising an error. Invalid arguments, such as a non-quarter `month`, still raise an error.
+`download_data()` returns `True` if the data was downloaded and unzipped successfully. If it can't download the data (e.g., there is no internet connection, the S3 bucket is unavailable, or there is no data for the requested `year` and `month`) or can't unzip it, `download_data()` prints an informative message and returns `False` instead of raising an error. Invalid arguments, such as a non-quarter `month`, still raise a `ValueError`. A name in `files` that is not in the archive raises a `KeyError`, because that is a mistake in the call and not an unavailable resource.
 
 Check the return value before processing:
 
