@@ -54,16 +54,16 @@ This package provides 3 utility functions:
 import fcall
 
 # Download & unzip a quarter into a directory
-fcall.download_data(
+# (returns True on success; prints a message and returns False on failure)
+if fcall.download_data(
     year=2025,
     month="September",
     dest="./fcadata",
-)
-
-# Parse the .TXT files into tidy Polars DataFrames + metadata
-result = fcall.process_data("./fcadata")
-result["data"]["RCB"]      # a polars.DataFrame
-result["metadata"]["RCB"]  # parsed schema for RCB
+):
+    # Parse the .TXT files into tidy Polars DataFrames + metadata
+    result = fcall.process_data("./fcadata")
+    result["data"]["RCB"]      # a polars.DataFrame
+    result["metadata"]["RCB"]  # parsed schema for RCB
 
 # Compare metadata between two quarters
 fcall.download_data(

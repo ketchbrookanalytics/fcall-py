@@ -149,9 +149,11 @@ multi-column expansion above. Datasets with no matching dict have no codes.
 
 ## Caveats & gotchas
 
-- **2024 FCA data is broken.** FCA's posted 2024 files have a known defect; the
-  R package catches processing errors and points users to
-  `ketchbrookanalytics/fcall` issue #23. Replicate a clear, similar warning.
+- **2024 S3 files differ from FCA's.** FCA's posted 2024 `RCR7` files are
+  missing rows. Ketchbrook added those rows to the copies in the S3 bucket
+  (`ketchbrookanalytics/fcall` #23, #46), so 2024 now processes normally. The
+  old "2024 data is broken" warning was removed in R 0.1.7 (fcall#47/#48) and
+  here (fcall-py#4).
 - **Encoding is Windows-1252**, not UTF-8. Always decode explicitly when reading
   both metadata and (for `compare_metadata`) raw content. Several code-dictionary
   `value` strings contain mojibake (`?` standing in for `≥`/`≤`/curly quotes)
@@ -164,8 +166,6 @@ multi-column expansion above. Datasets with no matching dict have no codes.
 - **`waldo::compare` has no Polars/Python equivalent.** `compare_metadata` will
   need a hand-rolled diff (line-level for content; set/order diff for filenames).
   Keep the returned structure usefully introspectable.
-- **PyPI name.** Confirm `fcall` is available on PyPI before first publish; pick
-  a fallback (e.g. `fcall-py`) if taken. The import name should stay `fcall`.
 - **Don't commit downloaded data** — `.TXT`/`.zip`/`fcadata*/` are gitignored.
 
 ## Conventions
@@ -177,6 +177,45 @@ multi-column expansion above. Datasets with no matching dict have no codes.
   scenario) rather than hitting the network. Mark any network test accordingly.
 - When in doubt about behavior, read the R source with
   `gh api repos/ketchbrookanalytics/fcall/contents/<path> --jq .content | base64 -d`.
+
+## Release & publish workflow
+
+- **Version source of truth**: `__version__` in `src/fcall/__init__.py`.
+- **CI** (`.github/workflows/ci.yml`) runs `pytest` on push to `main` and on
+  PRs, matrixed across ubuntu/macos/windows.
+- **Docs CI** (`.github/workflows/docs.yml`) builds the docs site (Quarto +
+  `great-docs`) on push to `main` and on PRs, then publishes to GitHub Pages
+  from `main` (PR builds get a preview deployment instead).
+- **Skip CI via commit message / PR title**:
+  - `[skip tests]` skips the `ci.yml` test job.
+  - `[skip docs]` skips the `docs.yml` build/publish job.
+  - Include both if a change touches neither code nor docs (e.g. a workflow
+    tweak); each check is gated independently, there's no single combined
+    `[skip ci]` flag.
+- **TestPyPI dry run** (`.github/workflows/publish-testpypi.yml`) is manual —
+  trigger via `workflow_dispatch` from the Actions tab. Builds with `uv build`
+  and publishes to `test.pypi.org` via `uv publish --trusted-publishing
+  always`. TestPyPI rejects re-uploads of an existing version, so bump
+  `__version__` (or add a `.devN`/`rcN` suffix) between dry runs.
+- **PyPI release** (`.github/workflows/publish.yml`) fires when a GitHub
+  Release is published. It first checks that the release tag (leading `v`
+  stripped, if present) matches `__version__` in
+  `src/fcall/__init__.py` — mismatches fail the job before anything is built.
+  Both publish workflows build with `uv build` and authenticate via **PyPI
+  Trusted Publishing (OIDC)** (`astral-sh/setup-uv@v9.0.0` + `uv publish
+  --trusted-publishing always`) — no stored API tokens.
+
+To cut a release:
+
+1. Bump `__version__` in `src/fcall/__init__.py`.
+2. Sanity-check the build locally with `uv build` (writes to `dist/`,
+   already gitignored) before tagging anything. `uv version` does **not**
+   work here since the version is `dynamic`/hatchling-path-sourced from
+   `__init__.py`, not a static `pyproject.toml` field.
+3. Optionally dry-run via the TestPyPI workflow (`workflow_dispatch`).
+4. Merge to `main`.
+5. Tag and publish a GitHub Release with a tag matching the version
+   (`v<version>` or `<version>`) to trigger `publish.yml`.
 
 ## Documentation
 

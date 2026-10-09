@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import io
+import sys
 import zipfile
 from pathlib import Path
 
@@ -41,8 +42,16 @@ def download_data(
     dest: str | Path,
     files: list[str] | None = None,
     quiet: bool = False,
-) -> None:
+) -> bool:
     """Download a quarter's FCA Call Report archive and unzip into *dest*.
+
+    The files in the S3 bucket are identical to those published by FCA, with
+    one exception: the ``RCR7`` data files in the March, June, September and
+    December 2024 archives have been corrected to add rows that are missing
+    from FCA's versions. Without these rows, :func:`process_data` fails on the
+    2024 data. See https://github.com/ketchbrookanalytics/fcall/issues/23 for
+    details. If you need FCA's original 2024 files, download them directly
+    from the FCA website.
 
     Parameters
     ----------
@@ -57,6 +66,22 @@ def download_data(
         Optional list of file names to extract; ``None`` extracts all.
     quiet:
         Suppress progress messages when ``True``.
+
+    Returns
+    -------
+    bool
+        ``True`` if the data was successfully downloaded and unzipped. If the
+        data cannot be downloaded (e.g., there is no internet connection, the
+        resource is unavailable, or there is no data for the requested
+        ``year`` and ``month``) or unzipped, an informative message is
+        printed to stderr and ``False`` is returned instead of raising.
+
+    Raises
+    ------
+    ValueError
+        If ``year`` or ``month`` is invalid.
+    KeyError
+        If a name in ``files`` is not in the archive.
     """
     if isinstance(year, (list, tuple)) or not isinstance(year, int):
         raise ValueError("You can only specify a single year (integer).")
@@ -70,34 +95,62 @@ def download_data(
     if not quiet:
         print(f"Downloading {url} …")
 
-    response = httpx.get(url, follow_redirects=True)
-    response.raise_for_status()
+    # Mirror R's CRAN-mandated behavior: fail gracefully (an informative
+    # message and `False`) if the resource is unavailable, instead of raising
+    try:
+        response = httpx.get(url, follow_redirects=True)
+        response.raise_for_status()
+    except httpx.HTTPError as exc:
+        _inform_failure(
+            f"Could not download {url}",
+            exc,
+            "The resource may be temporarily unavailable, or there may be no "
+            "data for the requested `year` and `month`. Please check your "
+            "internet connection and try again later.",
+        )
+        return False
 
-    # BytesIO avoids writing a temp file to disk before unzipping
-    with zipfile.ZipFile(io.BytesIO(response.content)) as zf:
-        if files is not None:
-            if isinstance(files, str):
-                files = [files]
-            available = set(zf.namelist())
-            missing = [f for f in files if f not in available]
-            if missing:
-                raise KeyError(
-                    f"There is no item named {missing[0]!r} in the archive.  "
-                    "Please pass the exact file name(s) you want to download to "
-                    "the `files` argument of `download_data()`."
-                )
-            members = files
-        else:
-            members = zf.namelist()
-        zf.extractall(path=dest, members=members)
+    try:
+        # BytesIO avoids writing a temp file to disk before unzipping
+        with zipfile.ZipFile(io.BytesIO(response.content)) as zf:
+            if files is not None:
+                if isinstance(files, str):
+                    files = [files]
+                available = set(zf.namelist())
+                missing = [f for f in files if f not in available]
+                if missing:
+                    raise KeyError(
+                        f"There is no item named {missing[0]!r} in the archive.  "
+                        "Please pass the exact file name(s) you want to download "
+                        "to the `files` argument of `download_data()`."
+                    )
+                members = files
+            else:
+                members = zf.namelist()
+            zf.extractall(path=dest, members=members)
+    except (zipfile.BadZipFile, OSError) as exc:
+        _inform_failure(
+            f"Could not unzip the file downloaded from {url}",
+            exc,
+            "The downloaded file may be incomplete or corrupt. Please try "
+            "again later.",
+        )
+        return False
 
     if not quiet:
         print(f"Files successfully downloaded into {dest}")
+
+    return True
 
 
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
+
+
+def _inform_failure(headline: str, exc: BaseException, hint: str) -> None:
+    """Print a download/unzip failure message to stderr (regardless of `quiet`)."""
+    print(f"{headline}\n  x {exc}\n  i {hint}", file=sys.stderr)
 
 
 def _resolve_month(month: int | str) -> str:
