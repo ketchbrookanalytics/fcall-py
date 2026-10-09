@@ -9,7 +9,6 @@ from __future__ import annotations
 import csv
 import io
 import re
-import warnings
 from pathlib import Path
 from typing import Any
 
@@ -40,18 +39,7 @@ def process_data(dir: str | Path) -> dict[str, Any]:
     if not dir.exists():
         raise FileNotFoundError(f'Directory "{dir}" does not exist.')
 
-    try:
-        return _process_data_all(dir)
-    except Exception as exc:
-        warnings.warn(
-            f"Error processing data: {exc}\n\n"
-            "NOTE: There is an outstanding issue with the 2024 files posted "
-            "by FCA. If you are trying to process 2024 data, please refer to "
-            "https://github.com/ketchbrookanalytics/fcall-py/issues/1 "
-            "for more information and solutions while FCA works on fixing the files.",
-            stacklevel=2,
-        )
-        raise
+    return _process_data_all(dir)
 
 
 def process_metadata_file(file: str | Path) -> dict[str, Any]:

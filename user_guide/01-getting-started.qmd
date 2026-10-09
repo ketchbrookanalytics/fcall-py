@@ -33,6 +33,8 @@ fcall.download_data(
 
 This downloads the September 2025 archive from Ketchbrook's public AWS S3 bucket and unzips it into `fcadata/`. Valid quarters are **March, June, September, and December** (or integers 3, 6, 9, 12).
 
+`download_data()` returns `True` on success. If the download fails (e.g., no internet connection, or no data for that quarter), it prints a message and returns `False` instead of raising an error.
+
 ### 2. Parse the data
 
 ```python
@@ -79,9 +81,3 @@ import fcall
 
 print(fcall.file_metadata)
 ```
-
-::: {.callout-warning}
-## 2024 data is broken
-
-FCA's 2024 posted files contain a known defect. If you try to process 2024 data, `fcall` will emit a warning and point you to [ketchbrookanalytics/fcall-py/issues/1](https://github.com/ketchbrookanalytics/fcall-py/issues/1) for details and workarounds.
-:::

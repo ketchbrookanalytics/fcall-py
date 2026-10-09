@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import io
 import zipfile
+from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import httpx
@@ -101,25 +102,87 @@ class TestBuildUrl:
 class TestDownloadFilesValidation:
     _ZIP = _make_zip("INST_Q202603_G20260401.TXT", "D_INST.TXT")
 
-    def test_bad_file_raises_key_error(self, tmp_path: "pytest.TempPathFactory") -> None:
-        with patch("httpx.get", return_value=_mock_response(self._ZIP)):
-            with pytest.raises(KeyError, match="INST"):
-                fcall.download_data(year=2026, month=3, dest=tmp_path, files=["INST"])
+    def test_bad_file_raises_key_error(self, tmp_path: Path) -> None:
+        with (
+            patch("httpx.get", return_value=_mock_response(self._ZIP)),
+            pytest.raises(KeyError, match="INST"),
+        ):
+            fcall.download_data(year=2026, month=3, dest=tmp_path, files=["INST"])
 
-    def test_bad_file_message_hints_exact_name(self, tmp_path: "pytest.TempPathFactory") -> None:
-        with patch("httpx.get", return_value=_mock_response(self._ZIP)):
-            with pytest.raises(KeyError, match="exact file name"):
-                fcall.download_data(year=2026, month=3, dest=tmp_path, files=["INST"])
+    def test_bad_file_message_hints_exact_name(self, tmp_path: Path) -> None:
+        with (
+            patch("httpx.get", return_value=_mock_response(self._ZIP)),
+            pytest.raises(KeyError, match="exact file name"),
+        ):
+            fcall.download_data(year=2026, month=3, dest=tmp_path, files=["INST"])
 
-    def test_bare_string_treated_as_single_file(self, tmp_path: "pytest.TempPathFactory") -> None:
-        with patch("httpx.get", return_value=_mock_response(self._ZIP)):
-            with pytest.raises(KeyError, match="INST"):
-                fcall.download_data(year=2026, month=3, dest=tmp_path, files="INST")
+    def test_bare_string_treated_as_single_file(self, tmp_path: Path) -> None:
+        with (
+            patch("httpx.get", return_value=_mock_response(self._ZIP)),
+            pytest.raises(KeyError, match="INST"),
+        ):
+            fcall.download_data(year=2026, month=3, dest=tmp_path, files="INST")
 
-    def test_valid_files_extracts_successfully(self, tmp_path: "pytest.TempPathFactory") -> None:
+    def test_valid_files_extracts_successfully(self, tmp_path: Path) -> None:
         with patch("httpx.get", return_value=_mock_response(self._ZIP)):
-            fcall.download_data(
+            out = fcall.download_data(
                 year=2026, month=3, dest=tmp_path,
                 files=["INST_Q202603_G20260401.TXT"], quiet=True,
             )
-        assert (tmp_path / "INST_Q202603_G20260401.TXT").exists()
+        assert out is True
+        assert [p.name for p in tmp_path.iterdir()] == ["INST_Q202603_G20260401.TXT"]
+
+
+class TestDownloadFailsGracefully:
+    """Download/unzip failures print a message and return False (fcall#47)."""
+
+    _URL = "https://fca-call-report-data.s3.us-east-1.amazonaws.com/raw/2099March.zip"
+
+    def _http_status_error(self, status: int) -> MagicMock:
+        request = httpx.Request("GET", self._URL)
+        response = httpx.Response(status, request=request)
+        resp = MagicMock(spec=httpx.Response)
+        resp.raise_for_status = MagicMock(
+            side_effect=httpx.HTTPStatusError(
+                "boom", request=request, response=response
+            )
+        )
+        return resp
+
+    def test_http_error_returns_false(
+        self, tmp_path: Path, capsys: pytest.CaptureFixture[str]
+    ) -> None:
+        with patch("httpx.get", return_value=self._http_status_error(404)):
+            out = fcall.download_data(year=2099, month=3, dest=tmp_path, quiet=True)
+        assert out is False
+        err = capsys.readouterr().err
+        assert f"Could not download {self._URL}" in err
+        assert "no data for the requested `year` and `month`" in err
+        assert list(tmp_path.iterdir()) == []
+
+    def test_connection_error_returns_false(
+        self, tmp_path: Path, capsys: pytest.CaptureFixture[str]
+    ) -> None:
+        with patch("httpx.get", side_effect=httpx.ConnectError("no internet")):
+            out = fcall.download_data(year=2099, month=3, dest=tmp_path, quiet=True)
+        assert out is False
+        err = capsys.readouterr().err
+        assert "Could not download" in err
+        assert "no internet" in err
+
+    def test_bad_zip_returns_false(
+        self, tmp_path: Path, capsys: pytest.CaptureFixture[str]
+    ) -> None:
+        with patch("httpx.get", return_value=_mock_response(b"not a zip file")):
+            out = fcall.download_data(year=2099, month=3, dest=tmp_path, quiet=True)
+        assert out is False
+        assert "Could not unzip" in capsys.readouterr().err
+        assert list(tmp_path.iterdir()) == []
+
+    def test_invalid_arguments_still_raise(self, tmp_path: Path) -> None:
+        with patch("httpx.get") as mock_get:
+            with pytest.raises(ValueError, match="between 1 and 12"):
+                fcall.download_data(year=2025, month=13, dest=tmp_path)
+            with pytest.raises(ValueError, match="single year"):
+                fcall.download_data(year="2025", month=9, dest=tmp_path)  # type: ignore[arg-type]
+        mock_get.assert_not_called()
